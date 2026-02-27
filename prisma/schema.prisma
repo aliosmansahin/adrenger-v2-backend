@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id BigInt @id @default(autoincrement())
+  email String @unique @db.VarChar(50)
+  nickname String @unique @db.VarChar(100)
+  hash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bio String?
+  lastOnline DateTime
+  online Boolean
+  refreshToken String?
+
+  createdRooms Room[] @relation("RoomCreator")
+  rooms UserRoom[]
+  messages Message[]
+  messageStatus MessageStatus[]
+}
+
+model Room {
+  id BigInt @id @default(autoincrement())
+  name String @db.VarChar(50)
+  createdAt DateTime @default(now())
+  createdById BigInt?
+  createdBy User? @relation("RoomCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  hash String?
+
+  users UserRoom[]
+  messages Message[]
+}
+
+model UserRoom {
+  userId BigInt
+  roomId BigInt
+  role String @default("member")
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roomId])
+  @@index([roomId])
+}
+
+model Message {
+  id BigInt @id @default(autoincrement())
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roomId BigInt
+  senderId BigInt
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  status MessageStatus[]
+
+  @@index([roomId, createdAt])
+  @@index([senderId])
+}
+
+model MessageStatus {
+  messageId BigInt
+  userId BigInt
+  deliveredAt DateTime?
+  seenAt DateTime?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@index([userId])
+}
