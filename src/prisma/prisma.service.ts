@@ -22,4 +22,14 @@ export class PrismaService extends PrismaClient {
 
         return user;
     }
+
+    async findUserFromEmail(userEmail: string) {
+        const user = await this.user.findUnique({
+            where: {
+                email: userEmail
+            }
+        });
+
+        return user;
+    }
 }
