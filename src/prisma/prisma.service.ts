@@ -2,11 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class PrismaService extends PrismaClient {
     constructor(config: ConfigService) {
-        const adapter = new PrismaPg({url: config.get("DATABASE_URL")})
+        const adapter = new PrismaPg({connectionString: config.get<string>("DATABASE_URL")})
         super({adapter});
+    }
+
+    async createUser(createUserDto: CreateUserDto) {
+        const user = await this.user.create({
+            data: {
+                email: createUserDto.email,
+                hash: createUserDto.hash,
+                nickname: createUserDto.nickname,
+            },
+        });
+
+        return user;
     }
 }

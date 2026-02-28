@@ -41,6 +41,7 @@ describe('AuthController', () => {
       const mockDto = {
         email: "email",
         password: "password",
+        nickname: "ali",
       }
 
       const result = controller.register(mockDto);
