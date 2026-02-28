@@ -4,10 +4,11 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-    constructor(private jwtService: JwtService, private prisma: PrismaService) {}
+    constructor(private jwtService: JwtService, private config: ConfigService, private prisma: PrismaService) {}
 
     async login(dto: LoginDto) {
         const user = await this.prisma.findUserFromEmail(dto.email);
@@ -21,10 +22,15 @@ export class AuthService {
             throw new UnauthorizedException("invalid_credentials");
 
         const payload = {sub: user.id.toString(), username: user.nickname};
-        const token = this.jwtService.sign(payload);
+        const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
+        const refresh_token = this.jwtService.sign(payload, { expiresIn: "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
+
+        //Save the refresh token to the db
+        this.prisma.updateRefreshTokenOfUser(user.id, refresh_token);
 
         return {
-            access_token: token
+            access_token,
+            refresh_token
         };
     }
     async register(dto: RegisterDto) {
@@ -41,9 +47,15 @@ export class AuthService {
         });
 
         const payload = {sub: createdUser.id.toString(), username: createdUser.nickname};
-        const token = this.jwtService.sign(payload);
+        const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
+        const refresh_token = this.jwtService.sign(payload, { expiresIn: "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
+        
+        //Save the refresh token to the db
+        this.prisma.updateRefreshTokenOfUser(createdUser.id, refresh_token);
+
         return {
-            access_token: token
+            access_token,
+            refresh_token
         };
     }
 }

@@ -30,10 +30,6 @@ describe('AuthService', () => {
         {
           provide: PrismaService,
           useValue: {
-            user: {
-              create: jest.fn(),
-              findUnique: jest.fn(),
-            },
             createUser: jest.fn().mockResolvedValue({
               id: 1,
               email: 'test@mail.com',
@@ -45,6 +41,7 @@ describe('AuthService', () => {
               nickname: 'test',
               hash: "mock-hash",
             }),
+            updateRefreshTokenOfUser: jest.fn()
           }
         }
       ],
@@ -67,14 +64,30 @@ describe('AuthService', () => {
 
       const user = {email: "test@email.com", password: "123", nickname: "test"};
 
-      await expect(service.register(user)).resolves.toEqual({access_token: "mock-jwt-token"});
+      await expect(service.register(user)).resolves.toEqual({access_token: "mock-jwt-token", refresh_token: "mock-jwt-token"});
       expect(prisma.findUserFromEmail).toHaveBeenCalledWith(user.email);
       expect(prisma.createUser).toHaveBeenCalledWith({
         email: "test@email.com",
         hash: "mock-hash",
         nickname: "test",
       });
-      expect(jwtService.sign).toHaveBeenCalledWith({sub: "1", username: "test"});
+      
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({sub: "1", username: "test"}),
+        expect.objectContaining({
+          expiresIn: "5m"
+        }
+      ));
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({sub: "1", username: "test"}),
+        expect.objectContaining({
+          expiresIn: "1d"
+        }
+      ));
+
+      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-jwt-token");
     });
 
     it("should throw ConflictException", async () => {
@@ -96,10 +109,26 @@ describe('AuthService', () => {
   
       const user = {email: "test@email.com", password: "123"};
   
-      await expect(service.login(user)).resolves.toEqual({access_token: "mock-jwt-token"});
+      await expect(service.login(user)).resolves.toEqual({access_token: "mock-jwt-token", refresh_token: "mock-jwt-token"});
       expect(prisma.findUserFromEmail).toHaveBeenCalledWith(user.email);
       expect(bcrypt.compare).toHaveBeenCalledWith(user.password, "mock-hash");
-      expect(jwtService.sign).toHaveBeenCalledWith({sub: "1", username: "test"});
+
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({sub: "1", username: "test"}),
+        expect.objectContaining({
+          expiresIn: "5m"
+        }
+      ));
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({sub: "1", username: "test"}),
+        expect.objectContaining({
+          expiresIn: "1d"
+        }
+      ));
+
+      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-jwt-token");
     });
 
     it("should throw NotFoundException", async () => {

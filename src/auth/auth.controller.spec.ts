@@ -31,9 +31,10 @@ describe('AuthController', () => {
   });
   
   describe("Login", () => {
-    it("should return access-token", () => {
+    it("should return access-token", async () => {
       mockAuthService.login.mockReturnValue({
         access_token: "mock-jwt-token",
+        refresh_token: "mock-jwt-token",
       });
 
       const mockDto = {
@@ -41,31 +42,40 @@ describe('AuthController', () => {
         password: "123",
       };
 
-      const result = controller.login(mockDto);
-      expect(result).toEqual({
+      const mockResponse = {
+        cookie: jest.fn(),
+      };
+
+      await expect(controller.login(mockDto, mockResponse as any)).resolves.toEqual({
         access_token: "mock-jwt-token",
       });
       expect(authService.login).toHaveBeenCalledWith(mockDto);
+      expect(mockResponse.cookie).toHaveBeenCalledWith("refresh_token", expect.any(String), expect.objectContaining({httpOnly: true}));
     });
   });
 
   describe("Register", () => {
-    it("should return access-token", () => {
+    it("should return access-token", async () => {
       mockAuthService.register.mockReturnValue({
         access_token: "mock-jwt-token",
+        refresh_token: "mock-jwt-token",
       })
       const mockDto = {
         email: "email",
         password: "password",
         nickname: "ali",
       }
+      
+      const mockResponse = {
+        cookie: jest.fn(),
+      };
 
-      const result = controller.register(mockDto);
-      expect(result).toEqual({
+      await expect(controller.register(mockDto, mockResponse as any)).resolves.toEqual({
         access_token: "mock-jwt-token",
       });
 
       expect(authService.register).toHaveBeenCalledWith(mockDto);
+      expect(mockResponse.cookie).toHaveBeenCalledWith("refresh_token", expect.any(String), expect.objectContaining({httpOnly: true}));
     });
   })
 });

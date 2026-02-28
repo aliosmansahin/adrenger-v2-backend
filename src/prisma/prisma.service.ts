@@ -32,4 +32,15 @@ export class PrismaService extends PrismaClient {
 
         return user;
     }
+
+    async updateRefreshTokenOfUser(id: bigint, refresh_token: string) {
+        await this.user.update({
+            data: {
+                refreshToken: refresh_token
+            },
+            where: {
+                id
+            }
+        });
+    }
 }
