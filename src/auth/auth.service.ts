@@ -3,12 +3,13 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
     constructor(private jwtService: JwtService, private prisma: PrismaService) {}
 
-    login() {
+    login(dto: LoginDto) {
 
     }
     async register(dto: RegisterDto) {

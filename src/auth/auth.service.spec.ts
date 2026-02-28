@@ -64,4 +64,6 @@ describe('AuthService', () => {
     });
     expect(jwtService.sign).toHaveBeenCalledWith({sub: "1", username: "test"});
   });
+
+  it.todo("should generate JWT on login");
 });

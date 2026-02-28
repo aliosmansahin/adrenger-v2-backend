@@ -8,6 +8,7 @@ describe('AuthController', () => {
 
   const mockAuthService = {
     register: jest.fn(),
+    login: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -30,7 +31,22 @@ describe('AuthController', () => {
   });
   
   describe("Login", () => {
-    it.todo("should return jwt-token");
+    it("should return access-token", () => {
+      mockAuthService.login.mockReturnValue({
+        access_token: "mock-jwt-token",
+      });
+
+      const mockDto = {
+        email: "email@email.com",
+        password: "123",
+      };
+
+      const result = controller.login(mockDto);
+      expect(result).toEqual({
+        access_token: "mock-jwt-token",
+      });
+      expect(authService.login).toHaveBeenCalledWith(mockDto);
+    });
   });
 
   describe("Register", () => {
