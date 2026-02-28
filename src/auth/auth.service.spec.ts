@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import * as bcrypt from "bcrypt";
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),
@@ -59,19 +59,35 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
-  it("should generate JWT on register", async () => {
-    (bcrypt.hash as jest.Mock).mockResolvedValue("mock-hash");
+  describe("Register", () => {
+    it("should generate JWT on register", async () => {
+      (bcrypt.hash as jest.Mock).mockResolvedValue("mock-hash");
 
-    const user = {email: "test@email.com", password: "123", nickname: "test"};
-    const result = await service.register(user as any);
+      (prisma.findUserFromEmail as jest.Mock).mockResolvedValue(null);
 
-    expect(result).toEqual({access_token: "mock-jwt-token"});
-    expect(prisma.createUser).toHaveBeenCalledWith({
-      email: "test@email.com",
-      hash: "mock-hash",
-      nickname: "test",
+      const user = {email: "test@email.com", password: "123", nickname: "test"};
+
+      await expect(service.register(user)).resolves.toEqual({access_token: "mock-jwt-token"});
+      expect(prisma.findUserFromEmail).toHaveBeenCalledWith(user.email);
+      expect(prisma.createUser).toHaveBeenCalledWith({
+        email: "test@email.com",
+        hash: "mock-hash",
+        nickname: "test",
+      });
+      expect(jwtService.sign).toHaveBeenCalledWith({sub: "1", username: "test"});
     });
-    expect(jwtService.sign).toHaveBeenCalledWith({sub: "1", username: "test"});
+
+    it("should throw ConflictException", async () => {
+      const user = {email: "test@email.com", password: "123", nickname: "test"};
+
+      (prisma.findUserFromEmail as jest.Mock).mockResolvedValue({
+        id: 1,
+        email: "test@email.com",
+      });
+      
+      await expect(service.register(user)).rejects.toThrow(ConflictException);
+      expect(prisma.findUserFromEmail).toHaveBeenCalledWith(user.email);
+    });
   });
 
   describe("Login", () => {
