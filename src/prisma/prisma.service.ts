@@ -43,4 +43,12 @@ export class PrismaService extends PrismaClient {
             }
         });
     }
+
+    async findUserFromId(id: bigint) {
+        return await this.user.findUnique({
+            where: {
+                id
+            }
+        });
+    }
 }

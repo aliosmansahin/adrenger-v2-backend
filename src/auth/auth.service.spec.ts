@@ -87,7 +87,7 @@ describe('AuthService', () => {
         }
       ));
 
-      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-jwt-token");
+      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-hash");
     });
 
     it("should throw ConflictException", async () => {
@@ -128,7 +128,7 @@ describe('AuthService', () => {
         }
       ));
 
-      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-jwt-token");
+      expect(prisma.updateRefreshTokenOfUser).toHaveBeenCalledWith(1, "mock-hash");
     });
 
     it("should throw NotFoundException", async () => {

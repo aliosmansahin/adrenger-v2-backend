@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -25,8 +26,10 @@ export class AuthService {
         const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
         const refresh_token = this.jwtService.sign(payload, { expiresIn: "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
 
+        const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
+
         //Save the refresh token to the db
-        this.prisma.updateRefreshTokenOfUser(user.id, refresh_token);
+        await this.prisma.updateRefreshTokenOfUser(user.id, hashedRefreshToken);
 
         return {
             access_token,
@@ -49,9 +52,35 @@ export class AuthService {
         const payload = {sub: createdUser.id.toString(), username: createdUser.nickname};
         const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
         const refresh_token = this.jwtService.sign(payload, { expiresIn: "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
+
+        const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
         
         //Save the refresh token to the db
-        this.prisma.updateRefreshTokenOfUser(createdUser.id, refresh_token);
+        await this.prisma.updateRefreshTokenOfUser(createdUser.id, hashedRefreshToken);
+
+        return {
+            access_token,
+            refresh_token
+        };
+    }
+
+    async refreshTokens(userFromRequest: any, oldRefreshToken: string, res: Response) {
+        const user = await this.prisma.findUserFromId(userFromRequest.userId);
+        
+        if(!user || !user.refreshToken)
+            throw new UnauthorizedException("unauthorized");
+
+        const isValid = await bcrypt.compare(oldRefreshToken, user.refreshToken);
+        if(!isValid) throw new UnauthorizedException("unauthorized");
+        
+        const payload = {sub: user.id.toString(), username: user.nickname};
+
+        const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
+        const refresh_token = this.jwtService.sign(payload, { expiresIn: "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
+
+        const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
+
+        await this.prisma.updateRefreshTokenOfUser(user.id, hashedRefreshToken);
 
         return {
             access_token,
