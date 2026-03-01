@@ -64,7 +64,7 @@ export class AuthService {
         };
     }
 
-    async refreshTokens(userFromRequest: any, oldRefreshToken: string, res: Response) {
+    async refreshTokens(userFromRequest: any, oldRefreshToken: string) {
         const user = await this.prisma.findUserFromId(userFromRequest.userId);
         
         if(!user || !user.refreshToken)

@@ -42,7 +42,7 @@ export class AuthController {
     async refresh(@Request() req, @Res({passthrough: true}) res: Response) {
         const oldRefreshToken = req.cookies.refresh_token;
 
-        const { access_token, refresh_token } = await this.authService.refreshTokens(req.user, oldRefreshToken, res);
+        const { access_token, refresh_token } = await this.authService.refreshTokens(req.user, oldRefreshToken);
 
         res.cookie("refresh_token", refresh_token, {
             httpOnly: true,
