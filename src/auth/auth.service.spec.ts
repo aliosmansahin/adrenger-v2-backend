@@ -49,6 +49,7 @@ describe('AuthService', () => {
               hash: "mock-hash",
               refreshToken: "mock-hash"
             }),
+            deleteRefreshTokenOfUser: jest.fn(),
           }
         }
       ],
@@ -229,5 +230,14 @@ describe('AuthService', () => {
       expect(prisma.findUserFromId).toHaveBeenCalledWith(user.userId);      
       expect(bcrypt.compare).toHaveBeenCalledWith(oldRefreshToken, "mock-hash");
     });
-  })
+  });
+
+  describe("Logout", () => {
+    it("should delete JWT refresh token on logout", async () => {
+      const user = {userId: 1};
+
+      await service.logout(user);
+      expect(prisma.deleteRefreshTokenOfUser).toHaveBeenCalledWith(1);
+    });
+  });
 });

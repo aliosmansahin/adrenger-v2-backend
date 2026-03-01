@@ -44,6 +44,17 @@ export class PrismaService extends PrismaClient {
         });
     }
 
+    async deleteRefreshTokenOfUser(id: bigint) {
+        await this.user.update({
+            data: {
+                refreshToken: null
+            },
+            where: {
+                id
+            }
+        });
+    }
+
     async findUserFromId(id: bigint) {
         return await this.user.findUnique({
             where: {

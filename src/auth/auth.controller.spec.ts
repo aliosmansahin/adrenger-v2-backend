@@ -10,6 +10,7 @@ describe('AuthController', () => {
     register: jest.fn(),
     login: jest.fn(),
     refreshTokens: jest.fn(),
+    logout: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -96,4 +97,17 @@ describe('AuthController', () => {
       expect(mockResponse.cookie).toHaveBeenCalledWith("refresh_token", expect.any(String), expect.objectContaining({httpOnly: true}));
     });
   });
+
+  describe("Logout", () => {
+    it("should delete refresh_token", async () => {
+      const mockResponse = {
+        clearCookie: jest.fn(),
+      };
+
+      await controller.logout({user: {userId: 1}}, mockResponse as any);
+
+      expect(authService.logout).toHaveBeenCalledWith({userId: 1});
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith("refresh_token", expect.objectContaining({httpOnly: true}));
+    });
+  })
 });

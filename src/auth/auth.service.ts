@@ -87,4 +87,8 @@ export class AuthService {
             refresh_token
         };
     }
+
+    async logout(userFromRequest: any) {
+        await this.prisma.deleteRefreshTokenOfUser(userFromRequest.userId);
+    }
 }
