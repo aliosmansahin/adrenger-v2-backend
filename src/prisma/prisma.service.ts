@@ -62,4 +62,24 @@ export class PrismaService extends PrismaClient {
             }
         });
     }
+
+    async createRoom(creatorUserId: bigint, name: string, hash: string | null) {
+        return await this.room.create({
+            data: {
+                name,
+                hash,
+                createdBy: {
+                    connect: {
+                        id: creatorUserId,
+                    },
+                },
+                users: {
+                    create: {
+                        userId: creatorUserId,
+                        role: "admin",
+                    },
+                }
+            }
+        });
+    }
 }
