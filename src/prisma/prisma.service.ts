@@ -82,4 +82,15 @@ export class PrismaService extends PrismaClient {
             }
         });
     }
+
+    async getRoomsOfUser(userId: bigint) {
+        return await this.userRoom.findMany({
+            where: {
+                userId,
+            },
+            include: {
+                room: true,
+            },
+        });
+    }
 }
