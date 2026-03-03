@@ -7,6 +7,8 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+  importFileExtension = ""
 }
 
 datasource db {
@@ -21,8 +23,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   bio String?
-  lastOnline DateTime
-  online Boolean
+  lastOnline DateTime @default(now())
+  online Boolean @default(true)
   refreshToken String?
 
   createdRooms Room[] @relation("RoomCreator")
