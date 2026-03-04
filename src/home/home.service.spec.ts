@@ -14,8 +14,8 @@ describe('HomeService', () => {
           provide: PrismaService,
           useValue: {
             getRoomsOfUser: jest.fn().mockResolvedValue([
-              { id: "1", name: "room 0", userId: "1" },
-              { id: "2", name: "room 1", userId: "1" }
+              { id: 1, name: "room 0", userId: 1 },
+              { id: 2, name: "room 1", userId: 1 }
             ]),
           },
         }
@@ -34,12 +34,14 @@ describe('HomeService', () => {
     it("should return all rooms that belong to user", async () => {
       const result = await service.getRooms(1 as unknown as bigint);
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(expect.arrayContaining([
+      const parsed = JSON.parse(result);
+
+      expect(Array.isArray(parsed)).toBe(true);
+      expect(parsed).toHaveLength(2);
+      expect(parsed).toEqual(expect.arrayContaining([
         expect.objectContaining({name: "room 0"})
       ]));
-      expect(result).toEqual(expect.arrayContaining([
+      expect(parsed).toEqual(expect.arrayContaining([
         expect.objectContaining({name: "room 1"})
       ]));
 
