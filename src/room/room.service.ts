@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import * as bcrypt from "bcrypt";
@@ -15,5 +15,20 @@ export class RoomService {
         const response = await this.prisma.createRoom(creatorUserid, createRoomDto.name, hash);
 
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
+
+    async deleteRoom(roomId: bigint, userId: bigint) {
+        const room = await this.prisma.findRoomFromId(roomId);
+        if(!room)
+            throw new NotFoundException("room_not_found");
+
+        //User and admin check
+        const user = await this.prisma.findUserInRoom(roomId, userId);
+
+        if(!user || user.role !== "admin")
+            throw new ForbiddenException("access_denied");
+
+        //Delete room
+        await this.prisma.deleteRoom(roomId);
     }
 }
