@@ -32,6 +32,11 @@ describe('RoomService', () => {
               role: "admin",
             }),
             deleteRoom: jest.fn(),
+            editRoom: jest.fn().mockResolvedValue({
+              id: 1,
+              name: "room edit",
+              hash: "mock-hash"
+            }),
           },
         },
       ],
@@ -65,42 +70,77 @@ describe('RoomService', () => {
 
   describe("Delete Room", () => {
     it("should delete room and return nothing", async () => {
-      const roomId = 1;
-      const userId = 1;
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
 
-      await expect(service.deleteRoom(roomId as unknown as bigint, userId as unknown as bigint)).resolves.not.toThrow();
-      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
-      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      const roomId = 1n;
+      const userId = 1n;
+
+      await expect(service.deleteRoom(roomId, userId)).resolves.toBeUndefined();
+      expect(spy).toHaveBeenCalledWith(roomId, userId);
       expect(prisma.deleteRoom).toHaveBeenCalledWith(roomId);
     });
+  });
+
+  describe("Edit Room", () => {
+    it("should return edited room data", async () => {
+      (bcrypt.hash as jest.Mock).mockResolvedValue("mock-hash");
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+
+      const roomId = 1n;
+      const userId = 1n;
+      const roomData = {name: "room edit", password: "empty or not edit"};
+
+      const result = await service.editRoom(roomId, roomData, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        name: "room edit",
+        id: 1
+      }));
+      expect(spy).toHaveBeenCalledWith(roomId, userId);
+      expect(bcrypt.hash).toHaveBeenCalledWith(roomData.password, 10);
+      expect(prisma.editRoom).toHaveBeenCalledWith(roomId, roomData.name, "mock-hash");
+    });
+  });
+
+  describe("Check Room Process Availability", () => {
+    it("should not throw", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+
+      await expect(service.checkProcessAvailability(roomId, userId)).resolves.toBeUndefined();
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
     it("should throw NotFoundException", async () => {
-      const roomId = 2; //Doesn't exist
-      const userId = 1;
+      const roomId = 2n; //Doesn't exist
+      const userId = 1n;
 
       (prisma.findRoomFromId as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.deleteRoom(roomId as unknown as bigint, userId as unknown as bigint)).rejects.toThrow(NotFoundException);
+      await expect(service.checkProcessAvailability(roomId, userId)).rejects.toThrow(NotFoundException);
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
     });
     it("should throw ForbiddenException because of user inexistence", async () => {
-      const roomId = 1;
-      const userId = 1;
+      const roomId = 1n;
+      const userId = 1n;
 
       (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.deleteRoom(roomId as unknown as bigint, userId as unknown as bigint)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkProcessAvailability(roomId, userId)).rejects.toThrow(ForbiddenException);
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
     it("should throw ForbiddenException because of user role is not admin", async () => {
-      const roomId = 1;
-      const userId = 1;
+      const roomId = 1n;
+      const userId = 1n;
 
       (prisma.findUserInRoom as jest.Mock).mockResolvedValue({
         role: "member",
       });
 
-      await expect(service.deleteRoom(roomId as unknown as bigint, userId as unknown as bigint)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkProcessAvailability(roomId, userId)).rejects.toThrow(ForbiddenException);
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });

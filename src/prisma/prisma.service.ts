@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
+import { EditRoomDto } from '../room/dto/edit-room.dto';
 
 @Injectable()
 export class PrismaService extends PrismaClient {
@@ -118,6 +119,18 @@ export class PrismaService extends PrismaClient {
             where: {
                 id: roomId
             }
+        })
+    }
+
+    async editRoom(roomId: bigint, name: string, hash: string | null) {
+        return await this.room.update({
+            where: {
+                id: roomId,
+            },
+            data: {
+                name,
+                hash
+            },
         })
     }
 }

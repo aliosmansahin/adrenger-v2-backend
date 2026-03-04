@@ -12,7 +12,11 @@ describe('RoomController', () => {
       id: "1",
       name: "room 0"
     }),
-    deleteRoom: jest.fn()
+    deleteRoom: jest.fn(),
+    editRoom: jest.fn().mockResolvedValue({
+      id: "1",
+      name: "room edit",
+    }),
   };
 
   const mockPrismaService = {
@@ -58,5 +62,16 @@ describe('RoomController', () => {
       await controller.deleteRoom(roomId as unknown as bigint, {user});
       expect(service.deleteRoom).toHaveBeenCalledWith(roomId, user.userId);
     });
-  })
+  });
+
+  describe("Edit Room", () => {
+    it("should return edited room data", async () => {
+      const user = {userId: 1};
+      const roomId = 1;
+      const roomData = {name: "room edit", password: "empty or not edit"};
+
+      await expect(controller.editRoom(roomId as unknown as bigint, roomData, {user})).resolves.toEqual(expect.objectContaining({id: "1", name: "room edit"}));
+      expect(service.editRoom).toHaveBeenCalledWith(roomId, roomData, user.userId);
+    });
+  });
 });
