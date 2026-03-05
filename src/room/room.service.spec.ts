@@ -41,6 +41,7 @@ describe('RoomService', () => {
               id: 1,
               name: "room join",
             }),
+            removeUserFromRoom: jest.fn(),
           },
         },
       ],
@@ -173,6 +174,26 @@ describe('RoomService', () => {
       const userId = 1n;
 
       expect(service.joinRoom(roomId, {}, userId)).rejects.toThrow(BadRequestException);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+  });
+
+  describe("Leave Room", () => {
+    it("should return undefined", async () => {
+      const roomId = 2n;
+      const userId = 1n;
+
+      await expect(service.leaveRoom(roomId, {}, userId)).resolves.toBeUndefined();
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(prisma.removeUserFromRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+    it("should throw NotFoundException", async () => {
+      const roomId = 1n;
+      const userId = 2n;
+
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.leaveRoom(roomId, {}, userId)).rejects.toThrow(NotFoundException);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });

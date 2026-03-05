@@ -4,6 +4,7 @@ import { RoomService } from './room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { EditRoomDto } from './dto/edit-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
+import { LeaveRoomDto } from './dto/leave-room.dto';
 
 @Controller('rooms')
 export class RoomController {
@@ -32,5 +33,12 @@ export class RoomController {
     @Post(":id/join")
     async joinRoom(@Param("id", ParseIntPipe) roomId: bigint, @Body() dto: JoinRoomDto, @Request() req) {
         return this.roomService.joinRoom(roomId, dto, req.user.userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Post(":id/leave")
+    async leaveRoom(@Param("id", ParseIntPipe) roomId: bigint, @Body() dto: LeaveRoomDto, @Request() req) {
+        return this.roomService.leaveRoom(roomId, dto, req.user.userId);
     }
 }

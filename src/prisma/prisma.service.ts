@@ -153,4 +153,22 @@ export class PrismaService extends PrismaClient {
             }
         })
     }
+
+    async removeUserFromRoom(roomId: bigint, userId: bigint) {
+        await this.room.update({
+            where: {
+                id: roomId,
+            },
+            data: {
+                users: {
+                    delete: {
+                        userId_roomId: {
+                            roomId,
+                            userId,
+                        }
+                    }
+                }
+            }
+        })
+    }
 }

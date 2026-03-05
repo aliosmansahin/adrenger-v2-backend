@@ -4,6 +4,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import * as bcrypt from "bcrypt";
 import { EditRoomDto } from './dto/edit-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
+import { LeaveRoomDto } from './dto/leave-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -59,5 +60,14 @@ export class RoomService {
         const response = await this.prisma.addUserToRoom(roomId, userId);
         
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
+
+    async leaveRoom(roomId: bigint, leaveRoomDto: LeaveRoomDto, userId: bigint) {
+        const user = await this.prisma.findUserInRoom(roomId, userId);
+
+        if(!user)
+            throw new NotFoundException("user_not_found");
+
+        await this.prisma.removeUserFromRoom(roomId, userId);
     }
 }
