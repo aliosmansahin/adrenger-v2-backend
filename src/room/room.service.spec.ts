@@ -269,4 +269,55 @@ describe('RoomService', () => {
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });
+
+  describe("Kick User", () => {
+    it("should not throw exception", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const kickUserId = 2n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue({
+        role: "member",
+      });
+
+      await expect(service.kickUser(roomId, {}, kickUserId, meUserId)).resolves.toBeUndefined();
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, kickUserId);
+      expect(prisma.removeUserFromRoom).toHaveBeenCalledWith(roomId, kickUserId);
+    });
+    it("should throw BadRequestException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const kickUserId = 1n;
+
+      await expect(service.kickUser(roomId, {}, kickUserId, meUserId)).rejects.toThrow(BadRequestException);
+    });
+    it("should throw NotFoundException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const kickUserId = 2n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.kickUser(roomId, {}, kickUserId, meUserId)).rejects.toThrow(NotFoundException);
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, kickUserId);
+    });
+    it("should throw ForbiddenException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const kickUserId = 2n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue({
+        role: "admin",
+      });
+
+      await expect(service.kickUser(roomId, {}, kickUserId, meUserId)).rejects.toThrow(ForbiddenException);
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, kickUserId);
+    });
+  })
 });

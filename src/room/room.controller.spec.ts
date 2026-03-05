@@ -22,6 +22,7 @@ describe('RoomController', () => {
       name: "room 0"
     }),
     leaveRoom: jest.fn(),
+    kickUser: jest.fn(),
   };
 
   const mockPrismaService = {
@@ -85,8 +86,12 @@ describe('RoomController', () => {
       const user = {userId: 2};
       const roomId = 1n;
 
-      await expect(controller.joinRoom(roomId, {}, {user})).resolves.toEqual(expect.objectContaining({id: "1", name: "room 0"}));
-      expect(service.joinRoom).toHaveBeenCalledWith(roomId, {}, user.userId);
+      const dto = {
+        password: "",
+      }
+
+      await expect(controller.joinRoom(roomId, dto, {user})).resolves.toEqual(expect.objectContaining({id: "1", name: "room 0"}));
+      expect(service.joinRoom).toHaveBeenCalledWith(roomId, dto, user.userId);
     })
   });
 
@@ -97,6 +102,17 @@ describe('RoomController', () => {
 
       await expect(controller.leaveRoom(roomId, {}, {user})).resolves.toBeUndefined();
       expect(service.leaveRoom).toHaveBeenCalledWith(roomId, {}, user.userId);
+    });
+  });
+
+  describe("Kick User", () => {
+    it("should not throw exception", async () => {
+      const user = {userId: 1};
+      const roomId = 1n;
+      const kickUserId = 2n;
+
+      await expect(controller.kickUser(roomId, kickUserId, {}, {user})).resolves.toBeUndefined();
+      expect(service.kickUser).toHaveBeenCalledWith(roomId, {}, kickUserId, user.userId);
     });
   });
 });

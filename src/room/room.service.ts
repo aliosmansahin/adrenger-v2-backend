@@ -5,6 +5,7 @@ import * as bcrypt from "bcrypt";
 import { EditRoomDto } from './dto/edit-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
+import { KickUserDto } from './dto/kick-user.dto';
 
 @Injectable()
 export class RoomService {
@@ -81,5 +82,22 @@ export class RoomService {
             throw new NotFoundException("user_not_found");
 
         await this.prisma.removeUserFromRoom(roomId, userId);
+    }
+    
+    async kickUser(roomId: bigint, kickUserDto: KickUserDto, kickUserId: bigint, meUserId: bigint) {
+        if(meUserId == kickUserId) //To check string with number
+            throw new BadRequestException("cant_kick_myself");
+
+        await this.checkProcessAvailability(roomId, meUserId); // Admin check
+
+        const kickUserInRoom = await this.prisma.findUserInRoom(roomId, kickUserId);
+        
+        if(!kickUserInRoom)
+            throw new NotFoundException("user_not_found_in_room");
+
+        if(kickUserInRoom.role === "admin")
+            throw new ForbiddenException("cant_kick_admins");
+
+        await this.prisma.removeUserFromRoom(roomId, kickUserId);
     }
 }
