@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RoomService } from './room.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from "bcrypt";
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn(),
@@ -36,6 +36,10 @@ describe('RoomService', () => {
               id: 1,
               name: "room edit",
               hash: "mock-hash"
+            }),
+            addUserToRoom: jest.fn().mockResolvedValue({
+              id: 1,
+              name: "room join",
             }),
           },
         },
@@ -142,6 +146,33 @@ describe('RoomService', () => {
 
       await expect(service.checkProcessAvailability(roomId, userId)).rejects.toThrow(ForbiddenException);
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+  });
+
+  describe("Join Room", () => {
+    it("should return new room data", async () => {
+      const roomId = 1n;
+      const userId = 2n;
+
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      const result = await service.joinRoom(roomId, {}, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        name: "room join",
+        id: 1
+      }));
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(prisma.addUserToRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+    it("should throw BadRequestException", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+
+      expect(service.joinRoom(roomId, {}, userId)).rejects.toThrow(BadRequestException);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });

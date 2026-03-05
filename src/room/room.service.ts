@@ -1,8 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import * as bcrypt from "bcrypt";
 import { EditRoomDto } from './dto/edit-room.dto';
+import { JoinRoomDto } from './dto/join-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -46,6 +47,17 @@ export class RoomService {
 
         const response = await this.prisma.editRoom(roomId, editRoomDto.name, hash);
 
+        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
+
+    async joinRoom(roomId: bigint, joinRoomDto: JoinRoomDto, userId: bigint) {
+        const user = await this.prisma.findUserInRoom(roomId, userId);
+
+        if(user)
+            throw new BadRequestException("user_already_joined");
+
+        const response = await this.prisma.addUserToRoom(roomId, userId);
+        
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 }

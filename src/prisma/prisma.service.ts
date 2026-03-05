@@ -133,4 +133,24 @@ export class PrismaService extends PrismaClient {
             },
         })
     }
+
+    async addUserToRoom(roomId: bigint, userId: bigint) {
+        return await this.room.update({
+            where: {
+                id: roomId,
+            },
+            data: {
+                users: {
+                    create: {
+                        role: "member",
+                        user: {
+                            connect: {
+                                id: userId,
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
 }
