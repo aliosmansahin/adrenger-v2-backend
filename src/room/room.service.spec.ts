@@ -6,6 +6,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn(),
+  compare: jest.fn()
 }));
 
 describe('RoomService', () => {
@@ -13,6 +14,7 @@ describe('RoomService', () => {
   let prisma: PrismaService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RoomService,
@@ -27,6 +29,7 @@ describe('RoomService', () => {
             findRoomFromId: jest.fn().mockResolvedValue({
               id: 1,
               name: "room",
+              hash: "mock-hash",
             }),
             findUserInRoom: jest.fn().mockResolvedValue({
               role: "admin",
@@ -152,13 +155,18 @@ describe('RoomService', () => {
   });
 
   describe("Join Room", () => {
-    it("should return new room data", async () => {
+    it("should return new room data with password", async () => {
       const roomId = 1n;
       const userId = 2n;
 
-      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+      const dto = {
+        password: "mock-password",
+      };
 
-      const result = await service.joinRoom(roomId, {}, userId);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await service.joinRoom(roomId, dto, userId);
 
       const parsed = JSON.parse(result);
 
@@ -166,15 +174,79 @@ describe('RoomService', () => {
         name: "room join",
         id: 1
       }));
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(bcrypt.compare).toHaveBeenCalledWith(dto.password, "mock-hash");
       expect(prisma.addUserToRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+    it("should return new room data withOUT password", async () => {
+      const roomId = 1n;
+      const userId = 2n;
+
+      const dto = {
+        password: "",
+      };
+
+      (prisma.findRoomFromId as jest.Mock).mockResolvedValue({
+        id: 1n,
+        name: "room",
+        hash: null,
+      });
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      const result = await service.joinRoom(roomId, dto, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        name: "room join",
+        id: 1
+      }));
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(prisma.addUserToRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+    it("should throw NotFoundException", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+      
+      const dto = {
+        password: "mock-password",
+      };
+
+      (prisma.findRoomFromId as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.joinRoom(roomId, dto, userId)).rejects.toThrow(NotFoundException);
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
     });
     it("should throw BadRequestException", async () => {
       const roomId = 1n;
       const userId = 1n;
+      
+      const dto = {
+        password: "mock-password",
+      };
 
-      expect(service.joinRoom(roomId, {}, userId)).rejects.toThrow(BadRequestException);
+      await expect(service.joinRoom(roomId, dto, userId)).rejects.toThrow(BadRequestException);
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+    it("should throw ForbiddenException due to invalid password", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+      
+      const dto = {
+        password: "mock-invalid-password",
+      };
+
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(service.joinRoom(roomId, dto, userId)).rejects.toThrow(ForbiddenException);
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(bcrypt.compare).toHaveBeenCalledWith(dto.password, "mock-hash");
     });
   });
 

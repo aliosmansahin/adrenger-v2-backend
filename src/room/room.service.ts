@@ -52,11 +52,23 @@ export class RoomService {
     }
 
     async joinRoom(roomId: bigint, joinRoomDto: JoinRoomDto, userId: bigint) {
+        const room = await this.prisma.findRoomFromId(roomId);
+
+        if(!room)
+            throw new NotFoundException("room_not_found");
+        
         const user = await this.prisma.findUserInRoom(roomId, userId);
 
         if(user)
             throw new BadRequestException("user_already_joined");
 
+        if(room.hash) {
+            const pwdResult = await bcrypt.compare(joinRoomDto.password, room.hash);
+
+            if(!pwdResult)
+                throw new ForbiddenException("password_invalid");
+        }
+        
         const response = await this.prisma.addUserToRoom(roomId, userId);
         
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
