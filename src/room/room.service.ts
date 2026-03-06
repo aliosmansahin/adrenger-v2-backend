@@ -35,6 +35,25 @@ export class RoomService {
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
+    async getRoom(roomId: bigint, userId: bigint) {
+        //Consider moving into checkProcessAvailability function
+        const room = await this.prisma.findRoomFromId(roomId);
+
+        if(!room)
+            throw new NotFoundException("room_not_found");
+
+        const user = await this.prisma.findUserInRoom(roomId, userId);
+
+        if(!user)
+            throw new ForbiddenException("user_not_in_room");
+
+        const response = await this.prisma.getRoom(roomId);
+
+        const {hash, ...responseWithoutHash} = response!;
+
+        return JSON.stringify(responseWithoutHash, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
+
     async deleteRoom(roomId: bigint, userId: bigint) {
         await this.checkProcessAvailability(roomId, userId);
 

@@ -26,6 +26,11 @@ describe('RoomService', () => {
               name: "room 0",
               hash: "mock-hash"
             }),
+            getRoom: jest.fn().mockResolvedValue({
+              id: 1,
+              name: "room 0",
+              hash: "mock-hash"
+            }),
             findRoomFromId: jest.fn().mockResolvedValue({
               id: 1,
               name: "room",
@@ -79,6 +84,42 @@ describe('RoomService', () => {
       expect(parsed).toEqual(expect.objectContaining({id: 1, name: roomData.name, hash: "mock-hash"}));
       expect(bcrypt.hash).toHaveBeenCalledWith(roomData.password, 10);
       expect(prisma.createRoom).toHaveBeenCalledWith(userId, roomData.name, "mock-hash");
+    });
+  });
+
+  describe("Get Room", () => {
+    it("should return room data without hash", async () => {
+      const userId = 1n;
+      const roomId = 1n;
+
+      const result = await service.getRoom(roomId, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({id: 1, name: "room 0"}));
+      expect(parsed).toEqual(expect.not.objectContaining({hash: "mock-hash"}));
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(prisma.getRoom).toHaveBeenCalledWith(roomId);
+    });
+    it("should throw NotFoundException", async () => {
+      const userId = 1n;
+      const roomId = 2n; //Not exists
+
+      (prisma.findRoomFromId as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.getRoom(roomId, userId)).rejects.toThrow(NotFoundException);
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+    });
+    it("should throw ForbiddenException", async () => {
+      const userId = 2n; //Not exists in room
+      const roomId = 1n;
+
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.getRoom(roomId, userId)).rejects.toThrow(ForbiddenException);
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });
 

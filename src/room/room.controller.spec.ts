@@ -12,6 +12,10 @@ describe('RoomController', () => {
       id: "1",
       name: "room 0"
     }),
+    getRoom: jest.fn().mockResolvedValue({
+      id: "1",
+      name: "room 0"
+    }),
     deleteRoom: jest.fn(),
     editRoom: jest.fn().mockResolvedValue({
       id: "1",
@@ -64,6 +68,19 @@ describe('RoomController', () => {
       const roomData = {name: "room 0", password: "empty or not"};
       await expect(controller.createRoom(roomData, {user})).resolves.toEqual(expect.objectContaining({id: "1", name: "room 0"}));
       expect(service.createRoom).toHaveBeenCalledWith(user.userId, roomData);
+    });
+  });
+
+  describe("Get Room", () => {
+    it("should return room data without hash", async () => {
+      const user = {userId: 1};
+      const roomId = 1n;
+
+      const result = await controller.getRoom(roomId, {user});
+
+      expect(result).toEqual(expect.objectContaining({id: "1", name: "room 0"}));
+      expect(result).toEqual(expect.not.objectContaining({hash: "mock-hash"}));
+      expect(service.getRoom).toHaveBeenCalledWith(roomId, user.userId);
     });
   });
 
