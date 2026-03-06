@@ -171,4 +171,18 @@ export class PrismaService extends PrismaClient {
             }
         })
     }
+
+    async promoteUserToAdminInRoom(roomId: bigint, userId: bigint) {
+        return await this.userRoom.update({
+            where: {
+                userId_roomId: {
+                    roomId,
+                    userId,
+                }
+            },
+            data: {
+                role: "admin",
+            }
+        })
+    }
 }

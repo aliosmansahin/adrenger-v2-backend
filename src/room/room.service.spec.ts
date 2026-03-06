@@ -45,6 +45,9 @@ describe('RoomService', () => {
               name: "room join",
             }),
             removeUserFromRoom: jest.fn(),
+            promoteUserToAdminInRoom: jest.fn().mockResolvedValue({
+              role: "admin",
+            })
           },
         },
       ],
@@ -319,5 +322,62 @@ describe('RoomService', () => {
       expect(spy).toHaveBeenCalledWith(roomId, meUserId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, kickUserId);
     });
-  })
+  });
+
+  describe("Promote User", () => {
+    it("should return promoted userroom object", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const promoteUserId = 2n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue({
+        role: "member",
+      });
+
+      const result = await service.promoteUser(roomId, {}, promoteUserId, meUserId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        role: "admin",
+      }));
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, promoteUserId);
+      expect(prisma.promoteUserToAdminInRoom).toHaveBeenCalledWith(roomId, promoteUserId);
+    });
+    it("should throw ForbiddenException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const promoteUserId = 1n;
+      
+      await expect(service.promoteUser(roomId, {}, promoteUserId, meUserId)).rejects.toThrow(ForbiddenException);
+    });
+    it("should throw NotFoundException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const promoteUserId = 3n; //Not exists
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.promoteUser(roomId, {}, promoteUserId, meUserId)).rejects.toThrow(NotFoundException);
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, promoteUserId);
+    });
+    it("should throw BadRequestException", async () => {
+      const roomId = 1n;
+      const meUserId = 1n;
+      const promoteUserId = 2n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (prisma.findUserInRoom as jest.Mock).mockResolvedValue({
+        role: "admin" // The user will be promoted is already an admin
+      });
+
+      await expect(service.promoteUser(roomId, {}, promoteUserId, meUserId)).rejects.toThrow(BadRequestException);
+      expect(spy).toHaveBeenCalledWith(roomId, meUserId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, promoteUserId);
+    });
+  });
 });

@@ -23,6 +23,9 @@ describe('RoomController', () => {
     }),
     leaveRoom: jest.fn(),
     kickUser: jest.fn(),
+    promoteUser: jest.fn().mockResolvedValue({
+      role: "admin",
+    })
   };
 
   const mockPrismaService = {
@@ -113,6 +116,18 @@ describe('RoomController', () => {
 
       await expect(controller.kickUser(roomId, kickUserId, {}, {user})).resolves.toBeUndefined();
       expect(service.kickUser).toHaveBeenCalledWith(roomId, {}, kickUserId, user.userId);
+    });
+  });
+
+  describe("Promote Admin", () => {
+    it("should return promoted userroom object", async () => {
+      const user = {userId: 1};
+      const roomId = 1n;
+      const promoteUserId = 2n;
+
+      await expect(controller.promoteUser(roomId, promoteUserId, {}, {user})).resolves.toEqual(expect.objectContaining({
+        role: "admin",
+      }));
     });
   });
 });

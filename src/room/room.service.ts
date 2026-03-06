@@ -6,6 +6,7 @@ import { EditRoomDto } from './dto/edit-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
 import { KickUserDto } from './dto/kick-user.dto';
+import { PromoteUserDto } from './dto/promote-user.dto';
 
 @Injectable()
 export class RoomService {
@@ -99,5 +100,24 @@ export class RoomService {
             throw new ForbiddenException("cant_kick_admins");
 
         await this.prisma.removeUserFromRoom(roomId, kickUserId);
+    }
+
+    async promoteUser(roomId: bigint, promoteUserDto: PromoteUserDto, promoteUserId: bigint, meUserId: bigint) {
+        if(meUserId == promoteUserId)
+            throw new ForbiddenException("cant_promote_myself");
+
+        await this.checkProcessAvailability(roomId, meUserId);
+
+        const promoteUserInRoom = await this.prisma.findUserInRoom(roomId, promoteUserId);
+
+        if(!promoteUserInRoom)
+            throw new NotFoundException("user_not_found_in_room");
+
+        if(promoteUserInRoom.role === "admin")
+            throw new BadRequestException("adready_admin");
+
+        const response = await this.prisma.promoteUserToAdminInRoom(roomId, promoteUserId);
+
+        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 }

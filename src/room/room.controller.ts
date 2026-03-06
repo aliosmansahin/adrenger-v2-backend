@@ -6,6 +6,7 @@ import { EditRoomDto } from './dto/edit-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
 import { KickUserDto } from './dto/kick-user.dto';
+import { PromoteUserDto } from './dto/promote-user.dto';
 
 @Controller('rooms')
 export class RoomController {
@@ -48,5 +49,12 @@ export class RoomController {
     @Post(":id/kick/:userId")
     async kickUser(@Param("id", ParseIntPipe) roomId: bigint, @Param("userId", ParseIntPipe) kickUserId: bigint,  @Body() dto: KickUserDto, @Request() req) {
         return this.roomService.kickUser(roomId, dto, kickUserId, req.user.userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    @Put(":id/promote/:userId")
+    async promoteUser(@Param("id", ParseIntPipe) roomId: bigint, @Param("userId", ParseIntPipe) promoteUserId: bigint, @Body() dto: PromoteUserDto, @Request() req) {
+        return this.roomService.promoteUser(roomId, dto, promoteUserId, req.user.userId);
     }
 }
