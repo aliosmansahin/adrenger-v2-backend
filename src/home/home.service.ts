@@ -5,11 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export class HomeService {
     constructor(private prisma: PrismaService) {}
 
-    getRooms(userId: bigint) {
-        return this.prisma.userRoom.findMany({
-            where: {
-                userId: userId,
-            },
-        });
+    async getRooms(userId: bigint) {
+        const response = await this.prisma.getRoomsOfUser(userId);
+
+        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 }

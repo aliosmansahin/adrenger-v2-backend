@@ -8,7 +8,7 @@ export class HomeController {
 
     @UseGuards(JwtAuthGuard)
     @Get()
-    home(@Request() req) {
+    async home(@Request() req) {
         const userId = req.user.userId;
         return this.homeService.getRooms(userId);
     }
