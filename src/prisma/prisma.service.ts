@@ -185,4 +185,18 @@ export class PrismaService extends PrismaClient {
             }
         })
     }
+
+    async depromoteUserToMemberInRoom(roomId: bigint, userId: bigint) {
+        return await this.userRoom.update({
+            where: {
+                userId_roomId: {
+                    roomId,
+                    userId,
+                }
+            },
+            data: {
+                role: "member",
+            }
+        });
+    }
 }

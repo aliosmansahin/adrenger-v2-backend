@@ -25,6 +25,9 @@ describe('RoomController', () => {
     kickUser: jest.fn(),
     promoteUser: jest.fn().mockResolvedValue({
       role: "admin",
+    }),
+    depromoteMyself: jest.fn().mockResolvedValue({
+      role: "member",
     })
   };
 
@@ -127,6 +130,17 @@ describe('RoomController', () => {
 
       await expect(controller.promoteUser(roomId, promoteUserId, {}, {user})).resolves.toEqual(expect.objectContaining({
         role: "admin",
+      }));
+    });
+  });
+
+  describe("Depromote Admin", () => {
+    it("should return depromoted userroom object", async () => {
+      const user = {userId: 1};
+      const roomId = 1n;
+
+      await expect(controller.depromoteMyself(roomId, {}, {user})).resolves.toEqual(expect.objectContaining({
+        role: "member",
       }));
     });
   });

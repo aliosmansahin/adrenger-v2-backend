@@ -7,6 +7,7 @@ import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
 import { KickUserDto } from './dto/kick-user.dto';
 import { PromoteUserDto } from './dto/promote-user.dto';
+import { DepromoteMyselfDto } from './dto/depromote-myself.dto';
 
 @Injectable()
 export class RoomService {
@@ -117,6 +118,14 @@ export class RoomService {
             throw new BadRequestException("adready_admin");
 
         const response = await this.prisma.promoteUserToAdminInRoom(roomId, promoteUserId);
+
+        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
+
+    async depromoteMyself(roomId: bigint, depromoteMyselfDto: DepromoteMyselfDto, userId: bigint) {
+        await this.checkProcessAvailability(roomId, userId);
+
+        const response = await this.prisma.depromoteUserToMemberInRoom(roomId, userId);
 
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }

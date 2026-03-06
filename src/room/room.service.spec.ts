@@ -47,7 +47,10 @@ describe('RoomService', () => {
             removeUserFromRoom: jest.fn(),
             promoteUserToAdminInRoom: jest.fn().mockResolvedValue({
               role: "admin",
-            })
+            }),
+            depromoteUserToMemberInRoom: jest.fn().mockResolvedValue({
+              role: "member",
+            }),
           },
         },
       ],
@@ -378,6 +381,25 @@ describe('RoomService', () => {
       await expect(service.promoteUser(roomId, {}, promoteUserId, meUserId)).rejects.toThrow(BadRequestException);
       expect(spy).toHaveBeenCalledWith(roomId, meUserId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, promoteUserId);
+    });
+  });
+
+  describe("Depromote Myself", () => {
+    it("should return depromoted userroom object", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+
+      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+
+      const result = await service.depromoteMyself(roomId, {}, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        role: "member",
+      }));
+      expect(spy).toHaveBeenCalledWith(roomId, userId);
+      expect(prisma.depromoteUserToMemberInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });
 });
