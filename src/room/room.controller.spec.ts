@@ -16,6 +16,10 @@ describe('RoomController', () => {
       id: "1",
       name: "room 0"
     }),
+    getRoomOnlyJoinData: jest.fn().mockResolvedValue({
+      id: "1",
+      name: "room 0"
+    }),
     deleteRoom: jest.fn(),
     editRoom: jest.fn().mockResolvedValue({
       id: "1",
@@ -81,6 +85,18 @@ describe('RoomController', () => {
       expect(result).toEqual(expect.objectContaining({id: "1", name: "room 0"}));
       expect(result).toEqual(expect.not.objectContaining({hash: "mock-hash"}));
       expect(service.getRoom).toHaveBeenCalledWith(roomId, user.userId);
+    });
+  });
+
+  describe("Get Room Only Join Data", () => {
+    it("should return only join room data", async () => {
+      const roomId = 1n;
+
+      await expect(controller.getRoomOnlyJoinData(roomId)).resolves.toEqual(expect.objectContaining({
+        id: "1",
+        name: "room 0"
+      }));
+      expect(service.getRoomOnlyJoinData).toHaveBeenCalledWith(roomId);
     });
   });
 

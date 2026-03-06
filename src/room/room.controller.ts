@@ -24,6 +24,11 @@ export class RoomController {
     async getRoom(@Param("id", ParseIntPipe) roomId: bigint, @Request() req) {
         return this.roomService.getRoom(roomId, req.user.userId);
     }
+
+    @Get(":id/only-join-data")
+    async getRoomOnlyJoinData(@Param("id", ParseIntPipe) roomId: bigint) {
+        return this.roomService.getRoomOnlyJoinData(roomId);
+    }
     
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)

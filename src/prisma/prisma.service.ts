@@ -98,6 +98,23 @@ export class PrismaService extends PrismaClient {
             }
         });
     }
+    
+    async getRoomOnlyJoinData(roomId: bigint) {
+        return await this.room.findUnique({
+            where: {
+                id: roomId,
+            },
+            select: {
+                id: true,
+                createdBy: {
+                    select: {
+                        nickname: true,
+                    }
+                },
+                name: true,
+            }
+        });
+    }
 
     async getRoomsOfUser(userId: bigint) {
         return await this.userRoom.findMany({

@@ -31,6 +31,10 @@ describe('RoomService', () => {
               name: "room 0",
               hash: "mock-hash"
             }),
+            getRoomOnlyJoinData: jest.fn().mockResolvedValue({
+              id: 1,
+              name: "room",
+            }),
             findRoomFromId: jest.fn().mockResolvedValue({
               id: 1,
               name: "room",
@@ -120,6 +124,30 @@ describe('RoomService', () => {
       await expect(service.getRoom(roomId, userId)).rejects.toThrow(ForbiddenException);
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+  });
+
+  describe("Get Room Only Join Data", () => {
+    it("should return only join room data", async () => {
+      const roomId = 1n;
+
+      const result = await service.getRoomOnlyJoinData(roomId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.objectContaining({
+        id: 1,
+        name: "room"
+      }));
+      expect(prisma.getRoomOnlyJoinData).toHaveBeenCalledWith(roomId);
+    });
+    it("should throw NotFoundException", async () => {
+      const roomId = 2n; //Not exists
+
+      (prisma.getRoomOnlyJoinData as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.getRoomOnlyJoinData(roomId)).rejects.toThrow(NotFoundException);
+      expect(prisma.getRoomOnlyJoinData).toHaveBeenCalledWith(roomId);
     });
   });
 
