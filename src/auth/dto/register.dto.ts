@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto {
     @IsNotEmpty()
@@ -16,4 +17,11 @@ export class RegisterDto {
     @MaxLength(50)
     @IsNotEmpty()
     nickname!: string;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        return ['on', 'true', true, '1', 1].includes(value);
+    })
+    @IsBoolean()
+    rememberMe!: boolean;
 }

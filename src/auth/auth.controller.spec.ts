@@ -42,6 +42,7 @@ describe('AuthController', () => {
       const mockDto = {
         email: "email@email.com",
         password: "123",
+        rememberMe: true,
       };
 
       const mockResponse = {
@@ -66,6 +67,7 @@ describe('AuthController', () => {
         email: "email",
         password: "password",
         nickname: "ali",
+        rememberMe: true,
       }
       
       const mockResponse = {
@@ -92,8 +94,12 @@ describe('AuthController', () => {
         cookie: jest.fn(),
       }
 
-      await expect(controller.refresh({cookies: {refresh_token: "mock-jwt-token"}, user: {userId: 1}}, mockResponse as any)).resolves.toEqual({access_token: "mock-jwt-token"});
-      expect(authService.refreshTokens).toHaveBeenCalledWith(expect.objectContaining({userId: 1}), "mock-jwt-token");
+      const mockDto = {
+        rememberMe: true,
+      }
+
+      await expect(controller.refresh(mockDto, {cookies: {refresh_token: "mock-jwt-token"}, user: {userId: 1}}, mockResponse as any)).resolves.toEqual({access_token: "mock-jwt-token"});
+      expect(authService.refreshTokens).toHaveBeenCalledWith(mockDto, expect.objectContaining({userId: 1}), "mock-jwt-token");
       expect(mockResponse.cookie).toHaveBeenCalledWith("refresh_token", expect.any(String), expect.objectContaining({httpOnly: true}));
     });
   });
