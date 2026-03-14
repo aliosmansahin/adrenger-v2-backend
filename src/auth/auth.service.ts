@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { RefreshDto } from './dto/refresh.dto';
 
 @Injectable()
 export class AuthService {
@@ -66,7 +65,7 @@ export class AuthService {
         };
     }
 
-    async refreshTokens(dto: RefreshDto, userFromRequest: any, oldRefreshToken: string) {
+    async refreshTokens(rememberMe: boolean, userFromRequest: any, oldRefreshToken: string) {
         const user = await this.prisma.findUserFromId(userFromRequest.userId);
         
         if(!user || !user.refreshToken)
@@ -78,7 +77,7 @@ export class AuthService {
         const payload = {sub: user.id.toString(), username: user.nickname};
 
         const access_token = this.jwtService.sign(payload, { expiresIn: "5m", secret: this.config.get<string>("ACCESS_JWT_SECRET") });
-        const refresh_token = this.jwtService.sign(payload, { expiresIn: dto.rememberMe ? "5d" : "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
+        const refresh_token = this.jwtService.sign(payload, { expiresIn: rememberMe ? "5d" : "1d", secret: this.config.get<string>("REFRESH_JWT_SECRET") });
 
         const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
 

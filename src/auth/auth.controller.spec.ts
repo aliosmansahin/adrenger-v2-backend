@@ -94,12 +94,10 @@ describe('AuthController', () => {
         cookie: jest.fn(),
       }
 
-      const mockDto = {
-        rememberMe: true,
-      }
+      const rememberMe = true;
 
-      await expect(controller.refresh(mockDto, {cookies: {refresh_token: "mock-jwt-token"}, user: {userId: 1}}, mockResponse as any)).resolves.toEqual({access_token: "mock-jwt-token"});
-      expect(authService.refreshTokens).toHaveBeenCalledWith(mockDto, expect.objectContaining({userId: 1}), "mock-jwt-token");
+      await expect(controller.refresh({cookies: {refresh_token: "mock-jwt-token", rememberMe }, user: {userId: 1}}, mockResponse as any)).resolves.toEqual({access_token: "mock-jwt-token"});
+      expect(authService.refreshTokens).toHaveBeenCalledWith(rememberMe, expect.objectContaining({userId: 1}), "mock-jwt-token");
       expect(mockResponse.cookie).toHaveBeenCalledWith("refresh_token", expect.any(String), expect.objectContaining({httpOnly: true}));
     });
   });

@@ -5,7 +5,6 @@ import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RefreshDto } from './dto/refresh.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -41,10 +40,13 @@ export class AuthController {
 
     @UseGuards(JwtRefreshGuard)
     @Post("refresh")
-    async refresh(@Body() dto: RefreshDto, @Request() req, @Res({passthrough: true}) res: Response) {
+    async refresh(@Request() req, @Res({passthrough: true}) res: Response) {
         const oldRefreshToken = req.cookies.refresh_token;
+        const rememberMeHeader = req.cookies.rememberMe;
 
-        const { access_token, refresh_token } = await this.authService.refreshTokens(dto, req.user, oldRefreshToken);
+        const rememberMe = ['on', 'true', true, '1', 1].includes(rememberMeHeader);
+
+        const { access_token, refresh_token } = await this.authService.refreshTokens(rememberMe, req.user, oldRefreshToken);
 
         res.cookie("refresh_token", refresh_token, {
             httpOnly: true,

@@ -171,11 +171,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue("mock-hash");
 
-      const mockDto = {
-        rememberMe: true,
-      }
+      const rememberMe = true;
       
-      await expect(service.refreshTokens(mockDto, user, oldRefreshToken)).resolves.toEqual({
+      await expect(service.refreshTokens(rememberMe, user, oldRefreshToken)).resolves.toEqual({
         access_token: "mock-jwt-token",
         refresh_token: "mock-jwt-token",
       });
@@ -205,11 +203,9 @@ describe('AuthService', () => {
 
       (prisma.findUserFromId as jest.Mock).mockResolvedValue(null);
 
-      const mockDto = {
-        rememberMe: true,
-      }
-
-      await expect(service.refreshTokens(mockDto, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
+      const rememberMe = true;
+      
+      await expect(service.refreshTokens(rememberMe, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
       expect(prisma.findUserFromId).toHaveBeenCalledWith(user.userId);
     });
     it("should throw UnauthorizedException via refreshToken cannot found", async () => {
@@ -218,11 +214,9 @@ describe('AuthService', () => {
 
       (prisma.findUserFromId as jest.Mock).mockResolvedValue({id: 1, nickname: "test"});
 
-      const mockDto = {
-        rememberMe: true,
-      }
-
-      await expect(service.refreshTokens(mockDto, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
+      const rememberMe = true;
+      
+      await expect(service.refreshTokens(rememberMe, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
       expect(prisma.findUserFromId).toHaveBeenCalledWith(user.userId);      
     });
     it("should throw UnauthorizedException via refreshToken comparison failure", async () => {
@@ -232,11 +226,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       (prisma.findUserFromId as jest.Mock).mockResolvedValue({id: 1, nickname: "test", refreshToken: "mock-hash"});
 
-      const mockDto = {
-        rememberMe: true,
-      }
-
-      await expect(service.refreshTokens(mockDto, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
+      const rememberMe = true;
+      
+      await expect(service.refreshTokens(rememberMe, user, oldRefreshToken)).rejects.toThrow(UnauthorizedException);
       expect(prisma.findUserFromId).toHaveBeenCalledWith(user.userId);      
       expect(bcrypt.compare).toHaveBeenCalledWith(oldRefreshToken, "mock-hash");
     });
