@@ -8,6 +8,14 @@ export class HomeService {
     async getRooms(userId: bigint) {
         const response = await this.prisma.getRoomsOfUser(userId);
 
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        const mapped = response.map((item) => {
+            return {
+                roomId: item.roomId,
+                role: item.role,
+                name: item.room.name,
+            }
+        });
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 }
