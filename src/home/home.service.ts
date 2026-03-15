@@ -5,8 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 export class HomeService {
     constructor(private prisma: PrismaService) {}
 
-    async getRooms(userId: bigint) {
-        const response = await this.prisma.getRoomsOfUser(userId);
+    async getRooms(userId: bigint, cursor: number | undefined) {
+        const response = await this.prisma.getRoomsOfUser(userId, cursor);
 
         const mapped = response.map((item) => {
             return {
