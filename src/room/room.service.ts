@@ -32,8 +32,6 @@ export class RoomService {
 
         const response = await this.prisma.createRoom(creatorUserid, createRoomDto.name, hash);
 
-        console.log(response);
-
         const mapped = {
             id: response.id,
             name: response.name,
