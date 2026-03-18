@@ -116,10 +116,23 @@ export class PrismaService extends PrismaClient {
         });
     }
 
-    async getRoomsOfUser(userId: bigint) {
+    async getRoomsOfUser(userId: bigint, cursor: number | undefined) {
         return await this.userRoom.findMany({
             where: {
                 userId,
+            },
+            ...(cursor && {
+                cursor: {
+                    userId_roomId: {
+                        roomId: cursor,
+                        userId,
+                    },
+                }
+            }),
+            take: 10, // 10 room limit
+            skip: cursor ? 1 : 0, //Skip the cursor to prevent duplication
+            orderBy: {
+                joinedAt: 'desc',
             },
             include: {
                 room: true,

@@ -32,7 +32,14 @@ export class RoomService {
 
         const response = await this.prisma.createRoom(creatorUserid, createRoomDto.name, hash);
 
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        console.log(response);
+
+        const mapped = {
+            id: response.id,
+            name: response.name,
+        }
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async getRoom(roomId: bigint, userId: bigint) {
