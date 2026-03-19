@@ -65,7 +65,16 @@ export class RoomService {
         if(!response)
             throw new NotFoundException("room_not_found");
 
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        const mapped = {
+            id: response.id,
+            createdBy: response.createdBy,
+            name: response.name,
+            hasPassword: response.hash ? true : false,
+        };
+
+        console.log(mapped);
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async deleteRoom(roomId: bigint, userId: bigint) {
