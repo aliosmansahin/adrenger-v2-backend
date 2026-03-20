@@ -72,8 +72,6 @@ export class RoomService {
             hasPassword: response.hash ? true : false,
         };
 
-        console.log(mapped);
-
         return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
