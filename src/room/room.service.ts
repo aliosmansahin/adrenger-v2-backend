@@ -56,7 +56,15 @@ export class RoomService {
 
         const {hash, ...responseWithoutHash} = response!;
 
-        return JSON.stringify(responseWithoutHash, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        const {id, ...responseWithoutHashAndId} = responseWithoutHash;
+        
+        const mapped = {
+            roomId,
+            ...responseWithoutHashAndId,
+            role: user.role,
+        };
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async getRoomOnlyJoinData(roomId: bigint) {
@@ -65,7 +73,14 @@ export class RoomService {
         if(!response)
             throw new NotFoundException("room_not_found");
 
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        const mapped = {
+            id: response.id,
+            createdBy: response.createdBy,
+            name: response.name,
+            hasPassword: response.hash ? true : false,
+        };
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async deleteRoom(roomId: bigint, userId: bigint) {
@@ -92,7 +107,7 @@ export class RoomService {
 
         if(!room)
             throw new NotFoundException("room_not_found");
-        
+
         const user = await this.prisma.findUserInRoom(roomId, userId);
 
         if(user)
@@ -106,8 +121,13 @@ export class RoomService {
         }
         
         const response = await this.prisma.addUserToRoom(roomId, userId);
+
+        const mapped = {
+            id: response.id,
+            name: response.name,
+        };
         
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async leaveRoom(roomId: bigint, leaveRoomDto: LeaveRoomDto, userId: bigint) {

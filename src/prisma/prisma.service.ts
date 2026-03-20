@@ -112,6 +112,7 @@ export class PrismaService extends PrismaClient {
                     }
                 },
                 name: true,
+                hash: true,
             }
         });
     }
