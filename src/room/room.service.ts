@@ -56,7 +56,15 @@ export class RoomService {
 
         const {hash, ...responseWithoutHash} = response!;
 
-        return JSON.stringify(responseWithoutHash, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        const {id, ...responseWithoutHashAndId} = responseWithoutHash;
+        
+        const mapped = {
+            roomId,
+            ...responseWithoutHashAndId,
+            role: user.role,
+        };
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async getRoomOnlyJoinData(roomId: bigint) {
