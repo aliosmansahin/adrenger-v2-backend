@@ -99,7 +99,7 @@ export class RoomService {
 
         if(!room)
             throw new NotFoundException("room_not_found");
-        
+
         const user = await this.prisma.findUserInRoom(roomId, userId);
 
         if(user)
@@ -113,8 +113,13 @@ export class RoomService {
         }
         
         const response = await this.prisma.addUserToRoom(roomId, userId);
+
+        const mapped = {
+            id: response.id,
+            name: response.name,
+        };
         
-        return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }
 
     async leaveRoom(roomId: bigint, leaveRoomDto: LeaveRoomDto, userId: bigint) {

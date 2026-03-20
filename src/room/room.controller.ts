@@ -44,6 +44,7 @@ export class RoomController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     @Post(":id/join")
     async joinRoom(@Param("id", ParseIntPipe) roomId: bigint, @Body() dto: JoinRoomDto, @Request() req) {
         return this.roomService.joinRoom(roomId, dto, req.user.userId);
