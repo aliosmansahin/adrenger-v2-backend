@@ -91,13 +91,32 @@ export class RoomService {
     }
 
     async editRoom(roomId: bigint, editRoomDto: EditRoomDto, userId: bigint) {
-        await this.checkProcessAvailability(roomId, userId);
+        const room = await this.prisma.findRoomFromId(roomId);
+        if(!room)
+            throw new NotFoundException("room_not_found");
 
-        let hash: string | null = null;
-        if(editRoomDto.password)
-            hash = await bcrypt.hash(editRoomDto.password, 10);
+        //User and admin check
+        const user = await this.prisma.findUserInRoom(roomId, userId);
 
-        const response = await this.prisma.editRoom(roomId, editRoomDto.name, hash);
+        if(!user || user.role !== "admin")
+            throw new ForbiddenException("access_denied");
+        
+        let hashForNewPassword: string | null = null;
+        
+        if(editRoomDto.changePassword) {
+            /* Check current password */
+            if(room.hash) {
+                const result = await bcrypt.compare(editRoomDto.currentPassword, room.hash);
+
+                if(!result)
+                    throw new ForbiddenException("current_password_invalid");
+            }
+
+            if(editRoomDto.newPassword)
+                hashForNewPassword = await bcrypt.hash(editRoomDto.newPassword, 10);    
+        }
+
+        const response = await this.prisma.editRoom(roomId, editRoomDto.name, editRoomDto.changePassword, hashForNewPassword);
 
         return JSON.stringify(response, (_, v) => typeof v === 'bigint' ? v.toString() : v);
     }

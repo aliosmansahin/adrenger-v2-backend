@@ -168,14 +168,16 @@ export class PrismaService extends PrismaClient {
         })
     }
 
-    async editRoom(roomId: bigint, name: string, hash: string | null) {
+    async editRoom(roomId: bigint, name: string, changePassword: boolean, hash: string | null) {
         return await this.room.update({
             where: {
                 id: roomId,
             },
             data: {
                 name,
-                hash
+                ...(changePassword && {
+                    hash
+                })
             },
         })
     }

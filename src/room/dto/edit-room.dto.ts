@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
 
 export class EditRoomDto {
     @IsString()
@@ -6,7 +6,14 @@ export class EditRoomDto {
     @Length(3, 30)
     name!: string;
 
+    @IsBoolean()
+    changePassword!: boolean;
+
     @IsOptional()
     @IsString()
-    password!: string;
+    currentPassword!: string;
+
+    @IsOptional()
+    @IsString()
+    newPassword!: string;
 }
