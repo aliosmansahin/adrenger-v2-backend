@@ -30,6 +30,9 @@ describe('RoomController', () => {
       name: "room 0"
     }),
     leaveRoom: jest.fn(),
+    getJoinedUsers: jest.fn().mockResolvedValue([
+      {roomId: "2", user: {userId: "2"}},
+    ]),
     kickUser: jest.fn(),
     promoteUser: jest.fn().mockResolvedValue({
       role: "admin",
@@ -141,6 +144,17 @@ describe('RoomController', () => {
 
       await expect(controller.leaveRoom(roomId, {}, {user})).resolves.toBeUndefined();
       expect(service.leaveRoom).toHaveBeenCalledWith(roomId, {}, user.userId);
+    });
+  });
+
+  describe("Get Joined Users", () => {
+    it("should return joined users of room", async () => {
+      const user = {userId: 2};
+      const roomId = 2n;
+      const cursor = undefined;
+
+      await expect(controller.getJoinedUsers(roomId, cursor, {user})).resolves.toEqual(expect.arrayContaining([expect.objectContaining({roomId: "2", user: {userId: "2"}})]));
+      expect(service.getJoinedUsers).toHaveBeenCalledWith(roomId, cursor, user.userId);
     });
   });
 

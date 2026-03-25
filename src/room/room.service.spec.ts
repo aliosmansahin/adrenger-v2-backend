@@ -60,6 +60,9 @@ describe('RoomService', () => {
             depromoteUserToMemberInRoom: jest.fn().mockResolvedValue({
               role: "member",
             }),
+            getUsersOfRoom: jest.fn().mockResolvedValue([
+              {roomId: 1n, userId: 1n, joinedAt: null, role: "admin", user: {nickname: "mock-nickname"}},
+            ]),
           },
         },
       ],
@@ -344,6 +347,22 @@ describe('RoomService', () => {
 
       await expect(service.leaveRoom(roomId, {}, userId)).rejects.toThrow(NotFoundException);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+  });
+
+  describe("Get Joined Users", () => {
+    it("should return mapped joined users of room", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+
+      const cursor = undefined;
+
+      const result = await service.getJoinedUsers(roomId, cursor, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.arrayContaining([expect.objectContaining({roomId: "1", joinedAt: null, role: "admin", user: {nickname: "mock-nickname", userId: "1"}})]));
+      expect(prisma.getUsersOfRoom).toHaveBeenCalledWith(roomId, cursor);
     });
   });
 
