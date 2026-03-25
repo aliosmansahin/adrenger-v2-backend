@@ -220,6 +220,29 @@ export class PrismaService extends PrismaClient {
         })
     }
 
+    async getUsersOfRoom(roomId: bigint, cursor: number | undefined) {
+        return await this.userRoom.findMany({
+            where: {
+                roomId,
+            },
+            ...(cursor && {
+                cursor: {
+                    userId_roomId: {
+                        roomId,
+                        userId: cursor,
+                    }
+                }
+            }),
+            include: {
+                user: {
+                    select: {
+                        nickname: true,
+                    }
+                }
+            }
+        });
+    }
+
     async promoteUserToAdminInRoom(roomId: bigint, userId: bigint) {
         return await this.userRoom.update({
             where: {
