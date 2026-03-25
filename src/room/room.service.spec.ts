@@ -60,6 +60,9 @@ describe('RoomService', () => {
             depromoteUserToMemberInRoom: jest.fn().mockResolvedValue({
               role: "member",
             }),
+            getUsersOfRoom: jest.fn().mockResolvedValue([
+              {roomId: 1n, userId: 1n, joinedAt: null, role: "admin", user: {nickname: "mock-nickname"}},
+            ]),
           },
         },
       ],
@@ -85,7 +88,7 @@ describe('RoomService', () => {
 
       const parsed = JSON.parse(result);
 
-      expect(parsed).toEqual(expect.objectContaining({id: 1, name: roomData.name, hash: "mock-hash"}));
+      expect(parsed).toEqual(expect.objectContaining({id: 1, name: roomData.name}));
       expect(bcrypt.hash).toHaveBeenCalledWith(roomData.password, 10);
       expect(prisma.createRoom).toHaveBeenCalledWith(userId, roomData.name, "mock-hash");
     });
@@ -100,7 +103,7 @@ describe('RoomService', () => {
 
       const parsed = JSON.parse(result);
 
-      expect(parsed).toEqual(expect.objectContaining({id: 1, name: "room 0"}));
+      expect(parsed).toEqual(expect.objectContaining({roomId: "1", name: "room 0"}));
       expect(parsed).toEqual(expect.not.objectContaining({hash: "mock-hash"}));
       expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
@@ -167,11 +170,11 @@ describe('RoomService', () => {
   describe("Edit Room", () => {
     it("should return edited room data", async () => {
       (bcrypt.hash as jest.Mock).mockResolvedValue("mock-hash");
-      const spy = jest.spyOn(service, "checkProcessAvailability").mockResolvedValue(undefined);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const roomId = 1n;
       const userId = 1n;
-      const roomData = {name: "room edit", password: "empty or not edit"};
+      const roomData = {name: "room edit", changePassword: true, currentPassword: "", newPassword: "empty or not edit"};
 
       const result = await service.editRoom(roomId, roomData, userId);
 
@@ -181,9 +184,11 @@ describe('RoomService', () => {
         name: "room edit",
         id: 1
       }));
-      expect(spy).toHaveBeenCalledWith(roomId, userId);
-      expect(bcrypt.hash).toHaveBeenCalledWith(roomData.password, 10);
-      expect(prisma.editRoom).toHaveBeenCalledWith(roomId, roomData.name, "mock-hash");
+      expect(prisma.findRoomFromId).toHaveBeenCalledWith(roomId);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+      expect(bcrypt.compare).toHaveBeenCalledWith(roomData.currentPassword, "mock-hash");
+      expect(bcrypt.hash).toHaveBeenCalledWith(roomData.newPassword, 10);
+      expect(prisma.editRoom).toHaveBeenCalledWith(roomId, roomData.name, roomData.changePassword, "mock-hash");
     });
   });
 
@@ -342,6 +347,22 @@ describe('RoomService', () => {
 
       await expect(service.leaveRoom(roomId, {}, userId)).rejects.toThrow(NotFoundException);
       expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
+    });
+  });
+
+  describe("Get Joined Users", () => {
+    it("should return mapped joined users of room", async () => {
+      const roomId = 1n;
+      const userId = 1n;
+
+      const cursor = undefined;
+
+      const result = await service.getJoinedUsers(roomId, cursor, userId);
+
+      const parsed = JSON.parse(result);
+
+      expect(parsed).toEqual(expect.arrayContaining([expect.objectContaining({roomId: "1", joinedAt: null, role: "admin", user: {nickname: "mock-nickname", userId: "1"}})]));
+      expect(prisma.getUsersOfRoom).toHaveBeenCalledWith(roomId, cursor);
     });
   });
 

@@ -157,6 +157,22 @@ export class RoomService {
 
         await this.prisma.removeUserFromRoom(roomId, userId);
     }
+
+    async getJoinedUsers(roomId: bigint, cursor: number | undefined, userId: bigint) {
+        const users = await this.prisma.getUsersOfRoom(roomId, cursor);
+
+        const mapped = users.map((user) => ({
+            roomId: user.roomId,
+            joinedAt: user.joinedAt,
+            role: user.role,
+            user: {
+                userId: user.userId,
+                nickname: user.user.nickname,
+            }
+        }));
+
+        return JSON.stringify(mapped, (_, v) => typeof v === 'bigint' ? v.toString() : v);
+    }
     
     async kickUser(roomId: bigint, kickUserDto: KickUserDto, kickUserId: bigint, meUserId: bigint) {
         if(meUserId == kickUserId) //To check string with number

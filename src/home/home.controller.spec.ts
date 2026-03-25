@@ -32,23 +32,23 @@ describe('HomeController', () => {
   describe("Get Rooms", () => {
     it("should return all rooms that belong to user", async () => {
       const mockRooms = [
-        { id: "1", name: "room 0", userId: "1" },
-        { id: "2", name: "room 1", userId: "1" }
+        { roomId: "1", role: "admin", name: "room 0" },
+        { roomId: "0", role: "member", name: "room 1" },
       ];
       (service.getRooms as jest.Mock).mockResolvedValue(mockRooms);
 
-      const result = await controller.home({user: {userId: 1}});
+      const result = await controller.home(undefined, {user: {userId: 1}});
 
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(mockRooms.length);
       expect(result).toEqual(expect.arrayContaining([
-        expect.objectContaining({name: "room 0"})
+        expect.objectContaining({roomId: "0"})
       ]));
       expect(result).toEqual(expect.arrayContaining([
-        expect.objectContaining({name: "room 1"})
+        expect.objectContaining({roomId: "1"})
       ]));
       
-      expect(service.getRooms).toHaveBeenCalledWith(1);
+      expect(service.getRooms).toHaveBeenCalledWith(1, undefined);
     });
   })
 });

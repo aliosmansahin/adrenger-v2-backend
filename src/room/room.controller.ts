@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoomService } from './room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -55,6 +55,12 @@ export class RoomController {
     @Post(":id/leave")
     async leaveRoom(@Param("id", ParseIntPipe) roomId: bigint, @Body() dto: LeaveRoomDto, @Request() req) {
         return this.roomService.leaveRoom(roomId, dto, req.user.userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get(":id/joined-users")
+    async getJoinedUsers(@Param("id", ParseIntPipe) roomId: bigint, @Query("cursor") cursor: number | undefined, @Request() req) {
+        return this.roomService.getJoinedUsers(roomId, cursor, req.user.userId);
     }
 
     @UseGuards(JwtAuthGuard)
