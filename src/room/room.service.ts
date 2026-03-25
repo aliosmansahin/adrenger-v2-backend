@@ -159,9 +159,18 @@ export class RoomService {
     }
 
     async getJoinedUsers(roomId: bigint, cursor: number | undefined, userId: bigint) {
-        const users = await this.prisma.getUsersOfRoom(roomId, cursor);
+        const [users, me] = await Promise.all([
+            this.prisma.getUsersOfRoom(roomId, cursor),
+            !cursor ? this.prisma.findUserInRoom(roomId, userId) : Promise.resolve(null)
+        ]);
 
-        const mapped = users.map((user) => ({
+        const usersWithoutMe = users.filter(u => String(u.userId) !== String(userId));
+
+        const finalUsers = (!cursor && me) 
+            ? [me, ...usersWithoutMe] 
+            : usersWithoutMe;
+
+        const mapped = finalUsers.map((user) => ({
             roomId: user.roomId,
             joinedAt: user.joinedAt,
             role: user.role,

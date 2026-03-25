@@ -149,6 +149,13 @@ export class PrismaService extends PrismaClient {
                     roomId,
                 }
             },
+            include: {
+                user: {
+                    select: {
+                        nickname: true
+                    }
+                }
+            }
         });
     }
 
@@ -233,6 +240,11 @@ export class PrismaService extends PrismaClient {
                     }
                 }
             }),
+            take: 10, // 10 user limit
+            skip: cursor ? 1 : 0, //Skip the cursor to prevent duplication
+            orderBy: {
+                joinedAt: 'desc',
+            },
             include: {
                 user: {
                     select: {

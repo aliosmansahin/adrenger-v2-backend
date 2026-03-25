@@ -40,9 +40,9 @@ describe('RoomService', () => {
               name: "room",
               hash: "mock-hash",
             }),
-            findUserInRoom: jest.fn().mockResolvedValue({
-              role: "admin",
-            }),
+            findUserInRoom: jest.fn().mockResolvedValue(
+              {joinedAt: null, role: "admin", roomId: "1", userId: "1", user: {nickname: "mock-nickname"}}
+            ),
             deleteRoom: jest.fn(),
             editRoom: jest.fn().mockResolvedValue({
               id: 1,
@@ -363,6 +363,7 @@ describe('RoomService', () => {
 
       expect(parsed).toEqual(expect.arrayContaining([expect.objectContaining({roomId: "1", joinedAt: null, role: "admin", user: {nickname: "mock-nickname", userId: "1"}})]));
       expect(prisma.getUsersOfRoom).toHaveBeenCalledWith(roomId, cursor);
+      expect(prisma.findUserInRoom).toHaveBeenCalledWith(roomId, userId);
     });
   });
 
